@@ -20,6 +20,9 @@ function createInstruction(quantuple){
 
 function setTape(){
     const tapeString = $("#stringInputTextArea").val()
+    const currentChar = tapeString.charAt(0)
+    const rightTape = tapeString.substring(1)
     userInput = tapeString
-    $("#tapeTextArea").text(tapeString)
+    $("#currentTapeTextArea").text(currentChar)
+    $("#rightTapeTextArea").text(rightTape)
 }
