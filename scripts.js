@@ -225,3 +225,6 @@ async function run(){
     
     alert("String is rejected!")
 }
+
+// To-do:
+// - Handle λ reads (state transitions and end states)
