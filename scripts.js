@@ -35,6 +35,10 @@ function setup(){
     instructions = new Array()
     isFinalState = false
 
+    $("#leftTapeTextArea").text("")
+    $("#currentTapeTextArea").text("")
+    $("#rightTapeTextArea").text("")
+
 
     const stringInput = $("#stringInputTextArea").val()
     const specsInput = $("#specsInputTextArea").val()
@@ -57,6 +61,8 @@ function setup(){
     const currentChar = stringInput.charAt(0)
     const rightTape = stringInput.substring(1)
     userInput = stringInput
+
+    console.log(userInput.length)
 
     $("#currentTapeTextArea").text(currentChar)
     $("#rightTapeTextArea").text(rightTape)
@@ -95,10 +101,20 @@ function setup(){
 }
 
 async function nextState(currentState, characterRead, stack0Top, stack1Top){
+
+    var newStack0
+    var newStack1
     
     for(let i = 0; i < instructions.length; i++){
 
+        console.log(instructions[i].stateName)
+        console.log(instructions[i].read)
+        console.log(instructions[i].stack0Top)
+        console.log(instructions[i].stack1Top)
+
         if(currentState == instructions[i].stateName && characterRead == instructions[i].read && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top){
+
+            console.log("Regular next state")
             
             $("#currentStateTextArea").text(instructions[i].destination)
             
@@ -106,7 +122,8 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
 
             if(instructions[i].stack0PushSymbol != "λ"){
 
-                var newStack0 = instructions[i].stack0PushSymbol + stack0
+                newStack0 = ""
+                newStack0 = instructions[i].stack0PushSymbol + stack0
                 stack0 = newStack0
                 $("#stack0TextArea").text(stack0)
             }else{
@@ -114,38 +131,45 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
                 $("#stack0TextArea").text(stack0)
             }
 
-            await sleep(1000)
-
             if(instructions[i].stack1PushSymbol != "λ"){
 
-                var newStack1 = instructions[i].stack1PushSymbol + stack1
+                newStack1 = ""
+                newStack1 = instructions[i].stack1PushSymbol + stack1
                 stack1 = newStack1
-                $("#stack0TextArea").text(stack1)
+                $("#stack1TextArea").text(stack1)
             }else{
                 stack1 = stack1.slice(1)
-                $("#stack0TextArea").text(stack1)
+                $("#stack1TextArea").text(stack1)
             }
 
-            await sleep(1000)
-
             headPosition += 1
-            $("#leftTapeTextArea").text(userInput.substring(0, headPosition - 1))
-            $("#currentTapeTextArea").text(userInput.charAt(headPosition))
-            $("#rightTapeTextArea").text(userInput.substring(headPosition + 1))
 
-            if(characterRead == "λ" && instructions[i].stack0Top == "Z" && instructions[i].stack1Top == "Z" && instructions[i].stack0PushSymbol == "λ" && instructions[i].stack1PushSymbol == "λ"){
-                isFinalState = true
+            if(userInput.length != 2){
+
+                $("#leftTapeTextArea").text(userInput.substring(0, headPosition - 1))
+                $("#currentTapeTextArea").text(userInput.charAt(headPosition))
+                $("#rightTapeTextArea").text(userInput.substring(headPosition + 1))
+                
+            }else{
+                
+                $("#leftTapeTextArea").text(userInput.charAt(0))
+                $("#currentTapeTextArea").text(userInput.charAt(1))
+                $("#rightTapeTextArea").text("")
             }
 
             break;
         }
 
         if(currentState == instructions[i].stateName && characterRead == "λ" && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top){
+
+            console.log("Entered final state")
+
             $("#currentStateTextArea").text(instructions[i].destination)
 
             if(instructions[i].stack0PushSymbol != "λ"){
 
-                var newStack0 = instructions[i].stack0PushSymbol + stack0
+                newStack0 = ""
+                newStack0 = instructions[i].stack0PushSymbol + stack0
                 stack0 = newStack0
                 $("#stack0TextArea").text(stack0)
             }else{
@@ -155,12 +179,13 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
 
             if(instructions[i].stack1PushSymbol != "λ"){
 
-                var newStack1 = instructions[i].stack1PushSymbol + stack1
+                newStack1 = ""
+                newStack1 = instructions[i].stack1PushSymbol + stack1
                 stack1 = newStack1
-                $("#stack0TextArea").text(stack1)
+                $("#stack1TextArea").text(stack1)
             }else{
                 stack1 = stack1.slice(1)
-                $("#stack0TextArea").text(stack1)
+                $("#stack1TextArea").text(stack1)
             }
 
             isFinalState = true
@@ -174,12 +199,17 @@ async function run(){
 
     var currentState, characterRead, stack0Top, stack1Top
 
-    for(let i = 0; i < userInput.length; i++){
+    for(let i = 0; i < userInput.length + 1; i++){
 
         currentState =  $("#currentStateTextArea").val()
         characterRead = $("#currentTapeTextArea").text()
         stack0Top = stack0.charAt(0)
         stack1Top = stack1.charAt(0)
+        
+        console.log(currentState)
+        console.log(characterRead)
+        console.log(stack0Top)
+        console.log(stack1Top)
 
         nextState(currentState, characterRead, stack0Top, stack1Top)
 
@@ -189,11 +219,6 @@ async function run(){
             alert("String is accepted!")
             break;
         }
-
-        console.log(currentState)
-        console.log(characterRead)
-        console.log(stack0Top)
-        console.log(stack1Top)
     }
 
     await sleep(1000)
