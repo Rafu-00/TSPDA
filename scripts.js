@@ -244,6 +244,11 @@ async function run(){
 
         await nextState(currentState, characterRead, stack0Top, stack1Top)
 
+        if(isAccepted == true && i < userInput.length){
+            isAccepted = false
+            break;
+        }
+
         if(isAccepted == true){
             alert("String is accepted!")
             break;
