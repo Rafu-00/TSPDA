@@ -37,6 +37,7 @@ function setup(){
     $("#leftTapeTextArea").text("")
     $("#currentTapeTextArea").text("")
     $("#rightTapeTextArea").text("")
+    $("#currentTimelineTextArea").text("")
 
 
     const stringInput = $("#stringInputTextArea").val()
@@ -60,11 +61,8 @@ function setup(){
     const currentChar = stringInput.charAt(0)
     const rightTape = stringInput.substring(1)
     userInput = stringInput
-
+    
     console.log(userInput.length)
-
-    $("#currentTapeTextArea").text(currentChar)
-    $("#rightTapeTextArea").text(rightTape)
 
     var specs = specsInput.split('\n')
     var state
@@ -72,6 +70,16 @@ function setup(){
     for(let i = 0; i < specs.length; i++){
         
         state = specs[i].split(" ")
+
+        if(state[5] != "^" && state[5] != "λ" && state[5].toUpperCase() == state[5].toLowerCase()){
+            alert("Only use alphabet characters, '^', or 'λ' for stack 0 symbol input")
+            return
+        }
+
+        if(state[6] != "^" && state[6] != "λ" && state[6].toUpperCase() == state[6].toLowerCase()){
+            alert("Only use alphabet characters, '^', or 'λ' for stack 1 symbol input")
+            return
+        }
         
         createInstruction({stateName: state[0],
                             read: state[1],
@@ -83,6 +91,9 @@ function setup(){
                             isStartState: state[7],
                             isEndState: state[8]})
     }
+
+    $("#currentTapeTextArea").text(currentChar)
+    $("#rightTapeTextArea").text(rightTape)
 
     for(let i = 0; i < instructions.length; i++){
 
@@ -114,24 +125,49 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
 
             console.log("Regular next state")
 
-            if(instructions[i].stack0PushSymbol != "λ"){
+            if(instructions[i].stack0PushSymbol != "λ" && instructions[i].stack0PushSymbol != "^"){
 
                 newStack0 = ""
                 newStack0 = instructions[i].stack0PushSymbol + stack0
                 stack0 = newStack0
-                
-            }else{
+            }else if(instructions[i].stack0PushSymbol == "^"){
+
                 stack0 = stack0.slice(1)
+            }else{
+                stack0 = stack0
             }
 
-            if(instructions[i].stack1PushSymbol != "λ"){
+            // if(instructions[i].stack0PushSymbol != "λ"){
+
+            //     newStack0 = ""
+            //     newStack0 = instructions[i].stack0PushSymbol + stack0
+            //     stack0 = newStack0
+                
+            // }else{
+            //     stack0 = stack0.slice(1)
+            // }
+
+            if(instructions[i].stack1PushSymbol != "λ" && instructions[i].stack1PushSymbol != "^"){
 
                 newStack1 = ""
                 newStack1 = instructions[i].stack1PushSymbol + stack1
                 stack1 = newStack1
-            }else{
+            }else if(instructions[i].stack1PushSymbol == "^"){
+
                 stack1 = stack1.slice(1)
+            }else{
+
+                stack1 = stack1
             }
+
+            // if(instructions[i].stack1PushSymbol != "λ"){
+
+            //     newStack1 = ""
+            //     newStack1 = instructions[i].stack1PushSymbol + stack1
+            //     stack1 = newStack1
+            // }else{
+            //     stack1 = stack1.slice(1)
+            // }
 
             headPosition += 1
 
@@ -143,6 +179,10 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
             await sleep(500)
 
             $("#currentStateTextArea").text(instructions[i].destination)
+
+            await sleep(500)
+
+            $("#currentTimelineTextArea").text($("#currentTimelineTextArea").val() + currentState + " -> ")
 
             await sleep(500)
 
@@ -176,26 +216,52 @@ async function endState(currentState, stack0Top, stack1Top, isEndState){
         if(currentState == instructions[i].stateName && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && isEndState == "&"){
 
             console.log("Entered final state")
-    
-            if(instructions[i].stack0PushSymbol != "λ"){
-    
+
+            if(instructions[i].stack0PushSymbol != "λ" && instructions[i].stack0PushSymbol != "^"){
+
                 newStack0 = ""
                 newStack0 = instructions[i].stack0PushSymbol + stack0
-                stack0 = newStack0           
-            }else{
+                stack0 = newStack0
+            }else if(instructions[i].stack0PushSymbol == "^"){
 
                 stack0 = stack0.slice(1)
+            }else{
+                
+                continue
             }
     
-            if(instructions[i].stack1PushSymbol != "λ"){
+            // if(instructions[i].stack0PushSymbol != "λ"){
     
+            //     newStack0 = ""
+            //     newStack0 = instructions[i].stack0PushSymbol + stack0
+            //     stack0 = newStack0           
+            // }else{
+
+            //     stack0 = stack0.slice(1)
+            // }
+
+            if(instructions[i].stack1PushSymbol != "λ" && instructions[i].stack1PushSymbol != "^"){
+
                 newStack1 = ""
                 newStack1 = instructions[i].stack1PushSymbol + stack1
                 stack1 = newStack1
-            }else{
-                
+            }else if(instructions[i].stack1PushSymbol == "^"){
+
                 stack1 = stack1.slice(1)
+            }else{
+
+                continue
             }
+    
+            // if(instructions[i].stack1PushSymbol != "λ"){
+    
+            //     newStack1 = ""
+            //     newStack1 = instructions[i].stack1PushSymbol + stack1
+            //     stack1 = newStack1
+            // }else{
+                
+            //     stack1 = stack1.slice(1)
+            // }
 
             headPosition -= 1
 
@@ -207,6 +273,10 @@ async function endState(currentState, stack0Top, stack1Top, isEndState){
             await sleep(500)
 
             $("#currentStateTextArea").text(instructions[i].destination)
+
+            await sleep(500)
+
+            $("#currentTimelineTextArea").text($("#currentTimelineTextArea").val() + currentState)
 
             await sleep(500)
 
