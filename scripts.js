@@ -3,14 +3,28 @@ const rejectMessage = "Rejected"
 
 var userInput = ""
 var headPosition = 0
-var stack0 = "Z"
-var stack1 = "Z"
-var instructions = new Array()
+var stack0 = ""
+var stack1 = ""
+var isStopped = false
 var isAccepted = false
+
+var numberOfStates = 0
+var inputAlphabet = new Array()
+var stack0Alphabet = new Array()
+var stack1Alphabet = new Array()
+var instructions = new Array()
+var initialState = ""
+var stack0InitialSymbol = ""
+var stack1InitialSymbol = ""
+var finalStates = new Array()
 
 function sleep(milliseconds) {  
     return new Promise(resolve => setTimeout(resolve, milliseconds));  
- }  
+ }
+ 
+ function validateSymbol(str) {
+    return /^[A-Za-z0-9]*$/.test(str);
+  }
 
 function createInstruction(heptuple){
 
@@ -20,19 +34,23 @@ function createInstruction(heptuple){
                          stack1Top: heptuple.stack1Top,
                          destination: heptuple.destination,
                          stack0PushSymbol: heptuple.stack0PushSymbol,
-                         stack1PushSymbol: heptuple.stack1PushSymbol,
-                         isStartState: heptuple.isStartState,
-                         isEndState: heptuple.isEndState})
+                         stack1PushSymbol: heptuple.stack1PushSymbol})
+}
+
+function stop(){
+    
+    isStopped = true
 }
 
 function setup(){
 
     userInput = ""
     headPosition = 0
-    stack0 = "Z"
-    stack1 = "Z"
+    stack0 = ""
+    stack1 = ""
     instructions = new Array()
     isAccepted = false
+    isStopped = false
 
     $("#leftTapeTextArea").text("")
     $("#currentTapeTextArea").text("")
@@ -71,37 +89,74 @@ function setup(){
         
         state = specs[i].split(" ")
 
-        if(state[5] != "^" && state[5] != "λ" && state[5].toUpperCase() == state[5].toLowerCase()){
-            alert("Only use alphabet characters, '^', or 'λ' for stack 0 symbol input")
-            return
-        }
+        if(i == 0){
 
-        if(state[6] != "^" && state[6] != "λ" && state[6].toUpperCase() == state[6].toLowerCase()){
-            alert("Only use alphabet characters, '^', or 'λ' for stack 1 symbol input")
-            return
+            numberOfStates = parseInt(state[0]) 
+        }else if(i == 1){
+
+            for(let j = 0; j < state.length; j++){
+                inputAlphabet.push(state[j])
+            }
+        }else if(i == 2){
+
+            for(let j = 0; j < state.length; j++){
+                stack0Alphabet.push(state[j])
+            }
+        }else if(i == 3){
+
+            for(let j = 0; j < state.length; j++){
+                stack1Alphabet.push(state[j])
+            }
+        }else if(i == specs.length - 4){
+
+            initialState = state[0]
+        }else if(i == specs.length - 3){
+
+            stack0InitialSymbol = state[0]
+            stack0 = stack0 + stack0InitialSymbol
+        }else if(i == specs.length - 2){
+
+            stack1InitialSymbol = state[0]
+            stack1 = stack1 + stack1InitialSymbol
+        }else if(i == specs.length - 1){
+
+            for(let j = 0; j < state.length; j++){
+                finalStates.push(state[j])
+            }
+        }else{
+
+            createInstruction({stateName: state[0],
+                               read: state[1],
+                               stack0Top: state[2],
+                               stack1Top: state[3],
+                               destination: state[4],
+                               stack0PushSymbol: state[5],
+                               stack1PushSymbol: state[6]})
         }
         
-        createInstruction({stateName: state[0],
-                            read: state[1],
-                            stack0Top: state[2],
-                            stack1Top: state[3],
-                            destination: state[4],
-                            stack0PushSymbol: state[5],
-                            stack1PushSymbol: state[6],
-                            isStartState: state[7],
-                            isEndState: state[8]})
+        // if(state[5] != "^" && state[5] != "λ" && validateSymbol(state[5]) != true){
+        //     alert("Only use alphabet characters, numbers, '^', or 'λ' for stack 0 symbol input")
+        //     return
+        // }
+
+        // if(state[6] != "^" && state[6] != "λ" && validateSymbol(state[6]) != true){
+        //     alert("Only use alphabet characters, numbers, '^', or 'λ' for stack 1 symbol input")
+        //     return
+        // }
+        
+        // createInstruction({stateName: state[0],
+        //                     read: state[1],
+        //                     stack0Top: state[2],
+        //                     stack1Top: state[3],
+        //                     destination: state[4],
+        //                     stack0PushSymbol: state[5],
+        //                     stack1PushSymbol: state[6]})
     }
 
     $("#currentTapeTextArea").text(currentChar)
     $("#rightTapeTextArea").text(rightTape)
 
-    for(let i = 0; i < instructions.length; i++){
-
-        if(instructions[i].isStartState == "*"){
-            $("#currentStateTextArea").text(instructions[i].stateName)
-            break;
-        }
-    }
+    $("#currentStateTextArea").text(initialState)
 
     $("#stack0TextArea").text(stack0)
     $("#stack1TextArea").text(stack1)
@@ -116,10 +171,91 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
     
     for(let i = 0; i < instructions.length; i++){
 
-        // console.log(instructions[i].stateName)
-        // console.log(instructions[i].read)
-        // console.log(instructions[i].stack0Top)
-        // console.log(instructions[i].stack1Top)
+        if(isStopped == true){
+            alert("You stopped the machine. Press Set and then Run again.")
+            break;
+        }
+
+        if(currentState == instructions[i].stateName && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && finalStates.includes(instructions[i].destination) == true){
+
+            await endState(currentState, stack0Top, stack1Top, instructions[i].isEndState)
+            await sleep(500)
+        }
+
+        if(currentState == instructions[i].stateName && instructions[i].read == "λ" && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && instructions[i].stack0PushSymbol != "^" && instructions[i].stack1PushSymbol != "^"){
+
+            console.log("No changes next state")
+
+            if(instructions[i].stack0PushSymbol != "λ" && instructions[i].stack0PushSymbol != "^"){
+
+                newStack0 = ""
+                newStack0 = instructions[i].stack0PushSymbol + stack0
+                stack0 = newStack0
+            }else if(instructions[i].stack0PushSymbol == "^"){
+
+                stack0 = stack0.slice(1)
+            }else{
+                stack0 = stack0
+            }
+
+            // if(instructions[i].stack0PushSymbol != "λ"){
+
+            //     newStack0 = ""
+            //     newStack0 = instructions[i].stack0PushSymbol + stack0
+            //     stack0 = newStack0
+                
+            // }else{
+            //     stack0 = stack0.slice(1)
+            // }
+
+            if(instructions[i].stack1PushSymbol != "λ" && instructions[i].stack1PushSymbol != "^"){
+
+                newStack1 = ""
+                newStack1 = instructions[i].stack1PushSymbol + stack1
+                stack1 = newStack1
+            }else if(instructions[i].stack1PushSymbol == "^"){
+
+                stack1 = stack1.slice(1)
+            }else{
+
+                stack1 = stack1
+            }
+
+            // if(instructions[i].stack1PushSymbol != "λ"){
+
+            //     newStack1 = ""
+            //     newStack1 = instructions[i].stack1PushSymbol + stack1
+            //     stack1 = newStack1
+            // }else{
+            //     stack1 = stack1.slice(1)
+            // }
+
+            await sleep(500)
+
+            $("#stack0TextArea").text(stack0)
+            $("#stack1TextArea").text(stack1)
+
+            await sleep(500)
+
+            $("#currentStateTextArea").text(instructions[i].destination)
+
+            await sleep(500)
+
+            $("#currentTimelineTextArea").text($("#currentTimelineTextArea").val() + currentState + " -> ")
+
+            await sleep(500)
+
+            if(instructions[i].isEndState != "&"){
+
+                $("#leftTapeTextArea").text(userInput.substring(0, headPosition))
+                $("#currentTapeTextArea").text(userInput.charAt(headPosition))
+                $("#rightTapeTextArea").text(userInput.substring(headPosition + 1))
+                
+            }
+
+            await sleep(500)
+            break;
+        }
 
         if(currentState == instructions[i].stateName && characterRead == instructions[i].read && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top){
 
@@ -197,12 +333,6 @@ async function nextState(currentState, characterRead, stack0Top, stack1Top){
             await sleep(500)
             break;
         }
-
-        if(currentState == instructions[i].stateName && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && instructions[i].isEndState == "&"){
-
-            await endState(currentState, stack0Top, stack1Top, instructions[i].isEndState)
-            await sleep(500)
-        }
     }
 }
 
@@ -213,7 +343,12 @@ async function endState(currentState, stack0Top, stack1Top, isEndState){
 
     for(let i = 0; i < instructions.length; i++){
 
-        if(currentState == instructions[i].stateName && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && isEndState == "&"){
+        if(isStopped == true){
+            alert("You stopped the machine. Press Set and then Run again.")
+            break;
+        }
+
+        if(currentState == instructions[i].stateName && stack0Top == instructions[i].stack0Top && stack1Top == instructions[i].stack1Top && finalStates.includes(currentState) == true){
 
             console.log("Entered final state")
 
@@ -302,6 +437,11 @@ async function run(){
 
     for(let i = 0; i < userInput.length + 1; i++){
 
+        if(isStopped == true){
+            alert("You stopped the machine. Press Set and then Run again.")
+            break;
+        }
+
         currentState =  $("#currentStateTextArea").val()
         characterRead = $("#currentTapeTextArea").text()
         stack0Top = stack0.charAt(0)
@@ -325,8 +465,8 @@ async function run(){
         }
     }
     
-    if(isAccepted != true){
-        alert("String is rejected!")
+    if(isAccepted != true && isStopped != true){
+        alert("String is rejected!")      
     }
     
 }
