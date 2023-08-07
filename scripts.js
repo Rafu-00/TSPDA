@@ -8,7 +8,7 @@ var stack1 = ""
 var isStopped = false
 var isAccepted = false
 
-var numberOfStates = 0
+var states = new Array()
 var inputAlphabet = new Array()
 var stack0Alphabet = new Array()
 var stack1Alphabet = new Array()
@@ -59,7 +59,7 @@ function customPreset(){
 }
 
 function secondPreset(){
-    let string = `7\na b c\na b\na b\nstart a Z Z loopA a λ * _\nloopA a a Z loopA a λ _ _\nloopA b a Z loopB ^ b _ _\nloopB b a b loopB ^ b _ _\nloopB c Z b loopC λ ^ _ _\nloopC c Z b loopC λ ^ _ _\nloopC λ Z Z loopC ^ ^ _ &\nstart\nZ\nZ\nloopC`
+    let string = `start loopA loopB loopC\na b c\na b\na b\nstart a Z Z loopA a λ * _\nloopA a a Z loopA a λ _ _\nloopA b a Z loopB ^ b _ _\nloopB b a b loopB ^ b _ _\nloopB c Z b loopC λ ^ _ _\nloopC c Z b loopC λ ^ _ _\nloopC λ Z Z loopC ^ ^ _ &\nstart\nZ\nZ\nloopC`
 
     $("#leftTapeTextArea").text("")
     $("#currentTapeTextArea").text("a")
@@ -118,7 +118,9 @@ function setup(){
 
         if(i == 0){
 
-            numberOfStates = parseInt(state[0]) 
+            for(let j = 0; j < state.length; j++){
+                states.push(state[j])
+            }
         }else if(i == 1){
 
             for(let j = 0; j < state.length; j++){
@@ -172,6 +174,7 @@ function setup(){
     $("#stack0TextArea").text(stack0)
     $("#stack1TextArea").text(stack1)
 
+    console.log(states)
     console.log(instructions)
     console.log(adjList)
 }
