@@ -18,13 +18,11 @@ var stack0InitialSymbol = ""
 var stack1InitialSymbol = ""
 var finalStates = new Array()
 
+var adjList = new Array()
+
 function sleep(milliseconds) {  
     return new Promise(resolve => setTimeout(resolve, milliseconds));  
- }
- 
- function validateSymbol(str) {
-    return /^[A-Za-z0-9]*$/.test(str);
-  }
+}
 
 function createInstruction(heptuple){
 
@@ -42,6 +40,34 @@ function stop(){
     isStopped = true
 }
 
+async function buildAdjList(){
+
+    for(let i = 0; i < instructions.length; i++){
+        
+        adjList.push({stateName: instructions[i].stateName, destination: instructions[i].destination})
+        console.log("Adj list no: " + i)
+    }
+}
+
+function customPreset(){
+    $("#leftTapeTextArea").text("")
+    $("#currentTapeTextArea").text("")
+    $("#rightTapeTextArea").text("")
+    $("#currentTimelineTextArea").text("")
+    $("#specsInputTextArea").val("")
+    $("#stringInputTextArea").val("")
+}
+
+function secondPreset(){
+    let string = `7\na b c\na b\na b\nstart a Z Z loopA a λ * _\nloopA a a Z loopA a λ _ _\nloopA b a Z loopB ^ b _ _\nloopB b a b loopB ^ b _ _\nloopB c Z b loopC λ ^ _ _\nloopC c Z b loopC λ ^ _ _\nloopC λ Z Z loopC ^ ^ _ &\nstart\nZ\nZ\nloopC`
+
+    $("#leftTapeTextArea").text("")
+    $("#currentTapeTextArea").text("a")
+    $("#rightTapeTextArea").text("aabbbccc")
+    $("#specsInputTextArea").val(string)
+    $("#stringInputTextArea").val("aaabbbccc")
+}
+
 function setup(){
 
     userInput = ""
@@ -51,6 +77,7 @@ function setup(){
     instructions = new Array()
     isAccepted = false
     isStopped = false
+    adjList = new Array()
 
     $("#leftTapeTextArea").text("")
     $("#currentTapeTextArea").text("")
@@ -133,25 +160,9 @@ function setup(){
                                stack0PushSymbol: state[5],
                                stack1PushSymbol: state[6]})
         }
-        
-        // if(state[5] != "^" && state[5] != "λ" && validateSymbol(state[5]) != true){
-        //     alert("Only use alphabet characters, numbers, '^', or 'λ' for stack 0 symbol input")
-        //     return
-        // }
-
-        // if(state[6] != "^" && state[6] != "λ" && validateSymbol(state[6]) != true){
-        //     alert("Only use alphabet characters, numbers, '^', or 'λ' for stack 1 symbol input")
-        //     return
-        // }
-        
-        // createInstruction({stateName: state[0],
-        //                     read: state[1],
-        //                     stack0Top: state[2],
-        //                     stack1Top: state[3],
-        //                     destination: state[4],
-        //                     stack0PushSymbol: state[5],
-        //                     stack1PushSymbol: state[6]})
     }
+
+    buildAdjList()
 
     $("#currentTapeTextArea").text(currentChar)
     $("#rightTapeTextArea").text(rightTape)
@@ -162,6 +173,7 @@ function setup(){
     $("#stack1TextArea").text(stack1)
 
     console.log(instructions)
+    console.log(adjList)
 }
 
 async function nextState(currentState, characterRead, stack0Top, stack1Top){
